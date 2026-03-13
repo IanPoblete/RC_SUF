@@ -268,6 +268,10 @@ body {
   .sidebar {
     display: none;
   }
+  #step2 .form-actions,
+  #step3 .form-actions {
+    left: 0;
+  }
 }
 
 /* Header */
@@ -688,8 +692,8 @@ select:focus {
 /* Plan cards */
 .plan-cards {
   display: grid;
-  grid-template-columns: repeat(3, minmax(240px, 1fr));
-  gap: 16px;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
   margin-bottom: 12px;
 }
 
@@ -709,7 +713,7 @@ select:focus {
   flex-direction: column;
   height: 100%;
   min-width: 0;
-  padding: 28px 28px;
+  padding: 20px 16px;
   border: 2px solid var(--border);
   border-radius: 8px;
   background: var(--bg-card);
@@ -2752,11 +2756,30 @@ select:focus {
 
 @media (min-width: 640px) and (max-width: 1023px) {
   .plan-cards {
-    grid-template-columns: repeat(2, 1fr);
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
   }
-
-  .plan-cards .plan-card:last-child {
-    grid-column: 1 / -1;
+  .plan-card-inner {
+    padding: 14px 12px;
+  }
+  .plan-name {
+    font-size: 14px;
+  }
+  .plan-price-accent {
+    font-size: 20px;
+  }
+  .plan-detail-grid {
+    gap: 2px 8px;
+    font-size: 11px;
+  }
+  .size-stop-label {
+    font-size: 0.7rem;
+  }
+  .card {
+    padding: 16px 16px 20px;
+  }
+  #step2.card {
+    padding: 12px 16px 12px;
   }
 }
 
