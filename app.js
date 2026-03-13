@@ -21,7 +21,14 @@
     ],
     cliCommand: 'redis-cli -h redis-abc123.redis.cloud -p 12345 -a ak9xY2mN2pQ7sL4v',
     cliCommandMasked: 'redis-cli -h redis-abc123.redis.cloud -p 12345 -a ••••••••',
-    sdkSnippet: "const redis = require('redis');\nconst client = redis.createClient({\n  url: process.env.REDIS_URL\n});\nawait client.connect();"
+    sdk: {
+      node: "const redis = require('redis');\nconst client = redis.createClient({\n  url: 'redis://default:<password>@redis-abc123.redis.cloud:12345'\n});\nawait client.connect();\nconsole.log(await client.ping());",
+      python: "import redis\n\nr = redis.Redis(\n  host='redis-abc123.redis.cloud',\n  port=12345,\n  password='<password>',\n  decode_responses=True\n)\nprint(r.ping())",
+      dotnet: "using StackExchange.Redis;\n\nvar mux = ConnectionMultiplexer.Connect(\n  \"redis-abc123.redis.cloud:12345,password=<password>\"\n);\nvar db = mux.GetDatabase();\nConsole.WriteLine(db.Ping());",
+      java: "import redis.clients.jedis.Jedis;\n\nJedis jedis = new Jedis(\n  \"redis-abc123.redis.cloud\", 12345\n);\njedis.auth(\"<password>\");\nSystem.out.println(jedis.ping());",
+      go: "package main\n\nimport (\n  \"context\"\n  \"fmt\"\n  \"github.com/redis/go-redis/v9\"\n)\n\nfunc main() {\n  rdb := redis.NewClient(&redis.Options{\n    Addr:     \"redis-abc123.redis.cloud:12345\",\n    Password: \"<password>\",\n  })\n  fmt.Println(rdb.Ping(context.Background()))\n}",
+      php: "require 'vendor/autoload.php';\n\n$client = new Predis\\Client([\n  'scheme' => 'tcp',\n  'host'   => 'redis-abc123.redis.cloud',\n  'port'   => 12345,\n  'password' => '<password>',\n]);\necho $client->ping();"
+    }
   };
 
   var DUPLICATE_NAMES = ['existing-db', 'mydb', 'cache'];
@@ -289,11 +296,9 @@
         el.sizeSliderFill.style.width = '0px';
       }
     }
-    if (el.sizePrice) {
-      var haMult = HA_MULTIPLIER[state.ha] || 1;
-      var total = Math.round(entry.price * haMult);
-      el.sizePrice.textContent = '$' + total + '/mo';
-    }
+    var haMult = HA_MULTIPLIER[state.ha] || 1;
+    var total = Math.round(entry.price * haMult);
+    setBottomPrice('Total: $' + total + '/mo');
     var haActive = state.ha !== 'none';
     if (haActive) {
       var halfLabel = halveSize(entry.label);
@@ -357,7 +362,7 @@
     var existingDz = track.querySelector('.size-slider-deadzone');
     if (existingDz) existingDz.remove();
     if (el.sizeSliderFill) { el.sizeSliderFill.style.width = '0px'; el.sizeSliderFill.style.left = '10px'; }
-    if (el.sizePrice) el.sizePrice.textContent = '$0/mo';
+    setBottomPrice('Total: $0/mo');
     if (el.sizeDetailMemory) el.sizeDetailMemory.textContent = '30 MB';
     if (el.sizeDetailOps) el.sizeDetailOps.textContent = '—';
     if (el.sizeDetailReplicaRow) el.sizeDetailReplicaRow.hidden = true;
@@ -417,6 +422,7 @@
       }
       updateProSizeDisplay();
     }
+    updatePrice();
   }
 
   function getSelectedPlan() {
@@ -432,17 +438,26 @@
     return sizes[0];
   }
 
+  function getProPrice() {
+    var ds = PRO_DATASETS[state.proDatasetIdx];
+    var base = 200 + (ds.value - 1) * 50;
+    var haMult = state.proHa ? 2 : 1;
+    return Math.round(base * haMult);
+  }
+
+  function setBottomPrice(text) {
+    var priceEl = document.getElementById('size-price');
+    if (priceEl) priceEl.textContent = text;
+  }
+
   function updatePrice() {
     var plan = getSelectedPlan();
     if (plan === 'essentials') {
       updateSizeDetails();
     } else if (plan === 'free') {
-      if (el.sizePrice) el.sizePrice.textContent = '$0/mo';
+      setBottomPrice('Total: $0/mo');
     } else if (plan === 'pro') {
-      var ds = PRO_DATASETS[state.proDatasetIdx];
-      var base = 200 + (ds.value - 1) * 50;
-      var haMult = state.proHa ? 2 : 1;
-      if (el.sizePrice) el.sizePrice.textContent = '$' + Math.round(base * haMult) + '/mo';
+      setBottomPrice('Total: $200/month min');
     }
   }
 
@@ -468,14 +483,14 @@
 
     el.reviewMemoryRow.hidden = false;
     el.reviewPlanSizeRow.hidden = false;
-    el.reviewHaRow.hidden = false;
-    el.reviewPersistRow.hidden = false;
+    el.reviewThroughputRow.hidden = false;
 
     if (plan === 'free') {
       el.reviewMemory.textContent = 'RAM';
       el.reviewPlanSize.textContent = '30 MB';
-      el.reviewHa.textContent = 'None';
-      el.reviewPersist.textContent = 'None';
+      if (el.reviewThroughput) el.reviewThroughput.textContent = '—';
+      el.reviewHaRow.hidden = true;
+      el.reviewPersistRow.hidden = true;
     } else if (plan === 'essentials') {
       el.reviewMemory.textContent = memoryLabels[state.memoryType] || 'RAM';
       var entry = getSizeEntry();
@@ -485,30 +500,33 @@
       } else {
         el.reviewPlanSize.textContent = entry.label;
       }
+      if (el.reviewThroughput) el.reviewThroughput.textContent = entry.ops ? (entry.ops.toLocaleString() + ' Ops/sec') : '—';
+      el.reviewHaRow.hidden = state.ha === 'none';
       el.reviewHa.textContent = haLabels[state.ha] || 'None';
+      el.reviewPersistRow.hidden = state.persistence === 'none';
       el.reviewPersist.textContent = persistLabels[state.persistence] || 'None';
     } else {
       var proDs = PRO_DATASETS[state.proDatasetIdx];
       el.reviewMemory.textContent = state.proFlex ? 'Flex (RAM + SSD)' : 'RAM';
       el.reviewPlanSize.textContent = proDs.label + ' dataset / ' + getProTotalMem(proDs) + ' total';
+      var proTpReview = PRO_THROUGHPUTS[state.proThroughputIdx];
+      if (el.reviewThroughput) el.reviewThroughput.textContent = proTpReview ? proTpReview.label : '—';
+      el.reviewHaRow.hidden = false;
       var proHaText = state.proHa ? (state.proMultiAz ? 'Multi-AZ' : 'Single-AZ') : 'None';
       el.reviewHa.textContent = proHaText;
+      el.reviewPersistRow.hidden = false;
       var proPersist = $('pro-persistence');
       el.reviewPersist.textContent = proPersist ? (persistLabels[proPersist.value] || 'None') : 'None';
     }
 
-    // Pro-specific rows: only show when user changed from defaults
-    var proRows = ['Throughput', 'RegionMode', 'RamPct', 'Hashing', 'Oss', 'Protocol', 'Port', 'Copies', 'Endpoint', 'Maintenance'];
-    proRows.forEach(function (key) {
+    // Pro-specific rows (except Throughput, which is always shown): only show when changed from defaults
+    var proOnlyRows = ['RegionMode', 'RamPct', 'Hashing', 'Oss', 'Protocol', 'Port', 'Copies', 'Endpoint', 'Maintenance'];
+    proOnlyRows.forEach(function (key) {
       var row = el['review' + key + 'Row'];
       if (row) row.hidden = true;
     });
 
     if (plan === 'pro') {
-      var proTp = PRO_THROUGHPUTS[state.proThroughputIdx];
-      if (el.reviewThroughput) el.reviewThroughput.textContent = proTp ? proTp.label : '—';
-      if (el.reviewThroughputRow) el.reviewThroughputRow.hidden = false;
-
       if (state.proRegionMode !== 'single') {
         var regionNames = [];
         selectedRegions.forEach(function (rid) {
@@ -568,6 +586,29 @@
 
     el.reviewPaymentRow.hidden = !state.paymentMethodAdded;
     el.reviewPayment.textContent = state.paymentMethodAdded ? '•••• •••• •••• 4242' : '—';
+
+    var pricingAmount = $('review-pricing-amount');
+    var pricingNote = $('review-pricing-note');
+    if (pricingAmount) {
+      if (plan === 'free') {
+        pricingAmount.textContent = '$0/month';
+        pricingNote.textContent = 'No payment required';
+      } else if (plan === 'essentials') {
+        var sizes = getCurrentSizes();
+        var priceEntry = null;
+        for (var pi = 0; pi < sizes.length; pi++) {
+          if (String(sizes[pi].value) === String(state.planSize)) { priceEntry = sizes[pi]; break; }
+        }
+        if (!priceEntry) priceEntry = sizes[0];
+        var haM = HA_MULTIPLIER[state.ha] || 1;
+        var monthlyPrice = Math.round(priceEntry.price * haM);
+        pricingAmount.textContent = '$' + monthlyPrice + '/month';
+        pricingNote.textContent = 'Billed monthly based on your plan size';
+      } else {
+        pricingAmount.textContent = '$200/month min';
+        pricingNote.textContent = 'A $200 hold will be placed on your card and released shortly after';
+      }
+    }
 
     var btnText = el.createDb.querySelector('.btn-text');
     if (btnText) {
@@ -661,13 +702,24 @@
     }, fail ? 1500 : 1800);
   }
 
+  function setSdkSnippet(lang) {
+    var code = MOCK.sdk[lang] || MOCK.sdk.node;
+    if (el.sdkSnippet) el.sdkSnippet.querySelector('code').textContent = code;
+  }
+
   function renderSuccessContent() {
     state.revealed = { conn: false, env: false, password: false };
     el.connectionString.textContent = MOCK.connectionStringMasked;
     el.envVars.querySelector('code').textContent = MOCK.envVarsMasked.join('\n');
-    el.sdkSnippet.querySelector('code').textContent = MOCK.sdkSnippet;
     el.cliCommand.textContent = MOCK.cliCommandMasked;
     el.revealConn.textContent = 'Reveal';
+
+    var langSelect = $('sdk-language');
+    if (langSelect) {
+      langSelect.value = 'node';
+      langSelect.onchange = function () { setSdkSnippet(this.value); };
+    }
+    setSdkSnippet('node');
 
     var dbNameEl = $('success-db-name');
     var hostEl = $('success-host');
@@ -808,6 +860,133 @@
     }
   }
 
+  var regionMeta = {
+    'us-east-1':        { name: 'US East (N. Virginia)',     flag: '🇺🇸', prefix: 'use1' },
+    'eu-west-1':        { name: 'EU (Ireland)',              flag: '🇮🇪', prefix: 'euw1' },
+    'ap-southeast-1':   { name: 'Asia Pacific (Singapore)',  flag: '🇸🇬', prefix: 'apse1' },
+    'us-west-2':        { name: 'US West (Oregon)',          flag: '🇺🇸', prefix: 'usw2' },
+    'eu-central-1':     { name: 'EU (Frankfurt)',            flag: '🇩🇪', prefix: 'euc1' }
+  };
+  var selectedRegions = [];
+  var vpcAzMode = 'no-preference';
+
+  function renderTags() {
+    var tagContainer = $('region-tags');
+    var tagDropdown = $('region-dropdown');
+    if (!tagContainer) return;
+    tagContainer.innerHTML = '';
+    if (selectedRegions.length === 0) {
+      tagContainer.innerHTML = '<span class="tag-picker-placeholder">Select regions…</span>';
+    } else {
+      selectedRegions.forEach(function (rid) {
+        var meta = regionMeta[rid] || { name: rid, flag: '' };
+        var chip = document.createElement('span');
+        chip.className = 'tag-chip';
+        chip.innerHTML = meta.flag + ' ' + meta.name +
+          ' <button type="button" class="tag-chip-remove" data-region="' + rid + '">&times;</button>';
+        tagContainer.appendChild(chip);
+      });
+    }
+    if (tagDropdown) {
+      tagDropdown.querySelectorAll('.tag-picker-option').forEach(function (opt) {
+        opt.classList.toggle('selected', selectedRegions.indexOf(opt.getAttribute('data-value')) !== -1);
+      });
+    }
+  }
+
+  function buildVpcRow(regionId) {
+    var meta = regionMeta[regionId] || { name: regionId, flag: '', prefix: regionId.replace(/-/g, '') };
+    var row = document.createElement('div');
+    row.className = 'vpc-region-row';
+    row.setAttribute('data-vpc-region', regionId);
+    var zones = '';
+    for (var i = 1; i <= 6; i++) {
+      zones += '<option value="' + meta.prefix + '-az' + i + '">' + meta.prefix + '-az' + i + '</option>';
+    }
+    var showZones = vpcAzMode === 'manual';
+    row.innerHTML =
+      '<div class="vpc-cell vpc-cell-region">' +
+        '<span class="vpc-region-name">' + meta.name + '</span>' +
+        '<span class="vpc-region-code">' + regionId + '</span>' +
+      '</div>' +
+      '<div class="vpc-cell vpc-cell-cidr">' +
+        '<div class="cidr-input-wrap">' +
+          '<input type="text" name="pro-cidr-' + regionId + '" value="192.168.0.0" placeholder="192.168.0.0" />' +
+          '<span class="cidr-suffix">/24 <span class="cidr-check">✓</span></span>' +
+        '</div>' +
+      '</div>' +
+      '<div class="vpc-cell vpc-cell-zones" ' + (showZones ? '' : 'hidden') + '>' +
+        '<div class="zone-picker" data-zone-picker="' + regionId + '">' +
+          '<div class="zone-picker-display">' +
+            '<span class="zone-picker-placeholder">Select three availability zones</span>' +
+            '<span class="zone-picker-arrow">&#9662;</span>' +
+          '</div>' +
+          '<div class="zone-picker-dropdown">' + zones + '</div>' +
+        '</div>' +
+      '</div>';
+
+    var picker = row.querySelector('[data-zone-picker="' + regionId + '"]');
+    var display = picker.querySelector('.zone-picker-display');
+    var dropdown = picker.querySelector('.zone-picker-dropdown');
+
+    display.addEventListener('click', function () {
+      picker.classList.toggle('open');
+    });
+
+    dropdown.querySelectorAll('option').forEach(function (opt) {
+      var item = document.createElement('div');
+      item.className = 'zone-picker-item';
+      item.setAttribute('data-value', opt.value);
+      item.innerHTML = '<input type="checkbox" /> <span>' + opt.textContent + '</span>';
+      opt.replaceWith(item);
+
+      item.addEventListener('click', function (e) {
+        var cb = item.querySelector('input[type="checkbox"]');
+        if (e.target !== cb) cb.checked = !cb.checked;
+        item.classList.toggle('checked', cb.checked);
+        var selected = [];
+        dropdown.querySelectorAll('.zone-picker-item.checked').forEach(function (el) {
+          selected.push(el.getAttribute('data-value'));
+        });
+        var placeholder = display.querySelector('.zone-picker-placeholder');
+        if (selected.length > 0) {
+          placeholder.textContent = selected.join(', ');
+          placeholder.classList.add('has-value');
+        } else {
+          placeholder.textContent = 'Select three availability zones';
+          placeholder.classList.remove('has-value');
+        }
+      });
+    });
+
+    return row;
+  }
+
+  function refreshVpcBlocks(regions) {
+    var container = $('vpc-config-container');
+    if (!container) return;
+    container.innerHTML = '';
+
+    var showZones = vpcAzMode === 'manual';
+
+    var header = document.createElement('div');
+    header.className = 'vpc-table-header';
+    header.innerHTML =
+      '<div class="vpc-header-cell">Region</div>' +
+      '<div class="vpc-header-cell">Deployment CIDR</div>' +
+      (showZones ? '<div class="vpc-header-cell">Zone IDs</div>' : '');
+    container.appendChild(header);
+
+    regions.forEach(function (rid) {
+      container.appendChild(buildVpcRow(rid));
+    });
+  }
+
+  function syncVpcFromTags() {
+    var regions = selectedRegions.length ? selectedRegions : [state.region || 'us-east-1'];
+    refreshVpcBlocks(regions);
+  }
+
   function initProControls() {
     var dsM = $('pro-ds-minus'), dsP = $('pro-ds-plus');
     var tpM = $('pro-tp-minus'), tpP = $('pro-tp-plus');
@@ -844,46 +1023,10 @@
       });
     }
 
-    var regionMeta = {
-      'us-east-1':        { name: 'US East (N. Virginia)',     flag: '🇺🇸', prefix: 'use1' },
-      'eu-west-1':        { name: 'EU (Ireland)',              flag: '🇮🇪', prefix: 'euw1' },
-      'ap-southeast-1':   { name: 'Asia Pacific (Singapore)',  flag: '🇸🇬', prefix: 'apse1' },
-      'us-west-2':        { name: 'US West (Oregon)',          flag: '🇺🇸', prefix: 'usw2' },
-      'eu-central-1':     { name: 'EU (Frankfurt)',            flag: '🇩🇪', prefix: 'euc1' }
-    };
-
     /* ---- Tag Picker for multi-region ---- */
     var tagPicker = $('region-tag-picker');
     var tagContainer = $('region-tags');
     var tagDropdown = $('region-dropdown');
-    var selectedRegions = [];
-
-    function renderTags() {
-      if (!tagContainer) return;
-      tagContainer.innerHTML = '';
-      if (selectedRegions.length === 0) {
-        tagContainer.innerHTML = '<span class="tag-picker-placeholder">Select regions…</span>';
-      } else {
-        selectedRegions.forEach(function (rid) {
-          var meta = regionMeta[rid] || { name: rid, flag: '' };
-          var chip = document.createElement('span');
-          chip.className = 'tag-chip';
-          chip.innerHTML = meta.flag + ' ' + meta.name +
-            ' <button type="button" class="tag-chip-remove" data-region="' + rid + '">&times;</button>';
-          tagContainer.appendChild(chip);
-        });
-      }
-      if (tagDropdown) {
-        tagDropdown.querySelectorAll('.tag-picker-option').forEach(function (opt) {
-          opt.classList.toggle('selected', selectedRegions.indexOf(opt.getAttribute('data-value')) !== -1);
-        });
-      }
-    }
-
-    function syncVpcFromTags() {
-      var regions = selectedRegions.length ? selectedRegions : [state.region || 'us-east-1'];
-      refreshVpcBlocks(regions);
-    }
 
     if (tagPicker) {
       tagContainer.addEventListener('click', function (e) {
@@ -920,97 +1063,6 @@
         document.querySelectorAll('.zone-picker.open').forEach(function (zp) {
           if (!zp.contains(e.target)) zp.classList.remove('open');
         });
-      });
-    }
-
-    /* ---- VPC block builder ---- */
-    var vpcAzMode = 'no-preference';
-
-    function buildVpcRow(regionId) {
-      var meta = regionMeta[regionId] || { name: regionId, flag: '', prefix: regionId.replace(/-/g, '') };
-      var row = document.createElement('div');
-      row.className = 'vpc-region-row';
-      row.setAttribute('data-vpc-region', regionId);
-      var zones = '';
-      for (var i = 1; i <= 6; i++) {
-        zones += '<option value="' + meta.prefix + '-az' + i + '">' + meta.prefix + '-az' + i + '</option>';
-      }
-      var showZones = vpcAzMode === 'manual';
-      row.innerHTML =
-        '<div class="vpc-cell vpc-cell-region">' +
-          '<span class="vpc-region-name">' + meta.name + '</span>' +
-          '<span class="vpc-region-code">' + regionId + '</span>' +
-        '</div>' +
-        '<div class="vpc-cell vpc-cell-cidr">' +
-          '<div class="cidr-input-wrap">' +
-            '<input type="text" name="pro-cidr-' + regionId + '" value="192.168.0.0" placeholder="192.168.0.0" />' +
-            '<span class="cidr-suffix">/24 <span class="cidr-check">✓</span></span>' +
-          '</div>' +
-        '</div>' +
-        '<div class="vpc-cell vpc-cell-zones" ' + (showZones ? '' : 'hidden') + '>' +
-          '<div class="zone-picker" data-zone-picker="' + regionId + '">' +
-            '<div class="zone-picker-display">' +
-              '<span class="zone-picker-placeholder">Select three availability zones</span>' +
-              '<span class="zone-picker-arrow">&#9662;</span>' +
-            '</div>' +
-            '<div class="zone-picker-dropdown">' + zones + '</div>' +
-          '</div>' +
-        '</div>';
-
-      var picker = row.querySelector('[data-zone-picker="' + regionId + '"]');
-      var display = picker.querySelector('.zone-picker-display');
-      var dropdown = picker.querySelector('.zone-picker-dropdown');
-
-      display.addEventListener('click', function () {
-        picker.classList.toggle('open');
-      });
-
-      dropdown.querySelectorAll('option').forEach(function (opt) {
-        var item = document.createElement('div');
-        item.className = 'zone-picker-item';
-        item.setAttribute('data-value', opt.value);
-        item.innerHTML = '<input type="checkbox" /> <span>' + opt.textContent + '</span>';
-        opt.replaceWith(item);
-
-        item.addEventListener('click', function (e) {
-          var cb = item.querySelector('input[type="checkbox"]');
-          if (e.target !== cb) cb.checked = !cb.checked;
-          item.classList.toggle('checked', cb.checked);
-          var selected = [];
-          dropdown.querySelectorAll('.zone-picker-item.checked').forEach(function (el) {
-            selected.push(el.getAttribute('data-value'));
-          });
-          var placeholder = display.querySelector('.zone-picker-placeholder');
-          if (selected.length > 0) {
-            placeholder.textContent = selected.join(', ');
-            placeholder.classList.add('has-value');
-          } else {
-            placeholder.textContent = 'Select three availability zones';
-            placeholder.classList.remove('has-value');
-          }
-        });
-      });
-
-      return row;
-    }
-
-    function refreshVpcBlocks(regions) {
-      var container = $('vpc-config-container');
-      if (!container) return;
-      container.innerHTML = '';
-
-      var showZones = vpcAzMode === 'manual';
-
-      var header = document.createElement('div');
-      header.className = 'vpc-table-header';
-      header.innerHTML =
-        '<div class="vpc-header-cell">Region</div>' +
-        '<div class="vpc-header-cell">Deployment CIDR</div>' +
-        (showZones ? '<div class="vpc-header-cell">Zone IDs</div>' : '');
-      container.appendChild(header);
-
-      regions.forEach(function (rid) {
-        container.appendChild(buildVpcRow(rid));
       });
     }
 
@@ -1187,8 +1239,43 @@
     el.backStep3.addEventListener('click', goBack);
     el.createDb.addEventListener('click', createDatabase);
 
+    function forcePriceForPlan(planVal) {
+      var priceEl = document.getElementById('size-price');
+      if (!priceEl) return;
+      if (planVal === 'free') {
+        priceEl.textContent = 'Total: $0/mo';
+      } else if (planVal === 'pro') {
+        priceEl.textContent = 'Total: $200/month min';
+      } else if (planVal === 'essentials') {
+        var sizeEntry = getSizeEntry();
+        var haM = HA_MULTIPLIER[state.ha] || 1;
+        priceEl.textContent = 'Total: $' + Math.round(sizeEntry.price * haM) + '/mo';
+      }
+    }
+    document.querySelectorAll('.plan-card').forEach(function (card) {
+      card.addEventListener('click', function () {
+        var inp = card.querySelector('input[name="plan"]');
+        if (!inp) return;
+        inp.checked = true;
+        var planVal = inp.value;
+        forcePriceForPlan(planVal);
+        planCardSync();
+        toggleConfig();
+        updatePrice();
+        updateStep2Button();
+        forcePriceForPlan(planVal);
+      });
+    });
     document.querySelectorAll('input[name="plan"]').forEach(function (r) {
-      r.addEventListener('change', function () { planCardSync(); toggleConfig(); updatePrice(); updateStep2Button(); });
+      r.addEventListener('change', function () {
+        var planVal = this.value;
+        forcePriceForPlan(planVal);
+        planCardSync();
+        toggleConfig();
+        updatePrice();
+        updateStep2Button();
+        forcePriceForPlan(planVal);
+      });
     });
     planCardSync();
     updateStep2Button();
@@ -1308,7 +1395,10 @@
 
     el.copyConn.addEventListener('click', function () { copyToClipboard(MOCK.connectionString, el.copyConn); });
     el.copyEnv.addEventListener('click', function () { copyToClipboard(MOCK.envVars.join('\n'), el.copyEnv); });
-    el.copySdk.addEventListener('click', function () { copyToClipboard(MOCK.sdkSnippet, el.copySdk); });
+    el.copySdk.addEventListener('click', function () {
+      var lang = $('sdk-language') ? $('sdk-language').value : 'node';
+      copyToClipboard(MOCK.sdk[lang] || MOCK.sdk.node, el.copySdk);
+    });
     el.copyCli.addEventListener('click', function () { copyToClipboard(MOCK.cliCommand, el.copyCli); });
 
     el.revealConn.addEventListener('click', function () {

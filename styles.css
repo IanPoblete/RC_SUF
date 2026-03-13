@@ -2310,6 +2310,41 @@ select:focus {
   padding: 7px 0;
   border-bottom: 1px solid var(--border);
 }
+.review-row[hidden] {
+  display: none !important;
+}
+.review-pricing-box {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 16px 0 8px;
+  padding: 12px 0 0;
+  border-top: 1px solid var(--border);
+}
+.review-pricing-label {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text);
+}
+.review-pricing-amount {
+  font-family: var(--secondary-font);
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--yellow);
+}
+.review-pricing-note {
+  font-size: 12px;
+  color: var(--text-secondary);
+  width: 100%;
+  margin-top: 2px;
+}
+.review-pricing-note:empty {
+  display: none;
+}
+.review-pricing-box[hidden] {
+  display: none !important;
+}
 
 .review-row:last-child {
   border-bottom: none;
@@ -2464,6 +2499,69 @@ select:focus {
   display: flex;
   flex-direction: column;
   gap: 12px;
+}
+
+.connect-section {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.connect-section-title {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text);
+}
+.info-tooltip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  font-size: 16px;
+  line-height: 1;
+  color: var(--text-secondary);
+  text-decoration: none;
+  vertical-align: middle;
+  margin-left: 4px;
+  border-radius: 50%;
+  transition: color 0.15s;
+}
+.info-tooltip:hover {
+  color: var(--accent);
+}
+.connect-divider {
+  border-top: 1px solid var(--border);
+  margin: 6px 0;
+}
+.sdk-picker {
+  display: flex;
+  align-items: center;
+}
+.sdk-language-select {
+  width: 100%;
+  padding: 10px 14px;
+  font-size: 14px;
+  font-weight: 500;
+  font-family: var(--primary-font);
+  color: var(--text);
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  cursor: pointer;
+  appearance: none;
+  -webkit-appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' fill='none'%3E%3Cpath d='M1 1.5l5 5 5-5' stroke='%23a0aec0' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 14px center;
+  padding-right: 36px;
+}
+.sdk-language-select:focus {
+  outline: 2px solid var(--primary);
+  outline-offset: -1px;
+}
+.sdk-language-select:hover {
+  border-color: var(--text-secondary);
 }
 
 /* Insight tab content */
@@ -2709,27 +2807,41 @@ select:focus {
   }
 
   .plan-cards {
-    grid-template-columns: repeat(3, 1fr);
-    gap: 6px;
+    grid-template-columns: 1fr;
+    gap: 8px;
   }
   .plan-card-inner {
-    padding: 12px 8px;
+    padding: 10px 14px;
+    flex-direction: row;
+    align-items: center;
+    gap: 10px;
   }
-  .plan-name {
-    font-size: 12px;
+  .plan-card .plan-name {
+    font-size: 14px;
     white-space: nowrap;
+    margin: 0;
   }
-  .plan-price-accent {
-    font-size: 16px;
+  .plan-card .plan-price-accent {
+    font-size: 14px;
+    margin: 0;
   }
-  .plan-detail-grid {
-    gap: 1px 4px;
-    font-size: 9px;
-  }
-  .plan-detail-label {
+  .plan-card .plan-detail-grid {
     display: none;
   }
-
+  .plan-card.plan-selected .plan-detail-grid {
+    display: grid;
+    gap: 2px 8px;
+    font-size: 11px;
+    margin-top: 6px;
+  }
+  .plan-card.plan-selected .plan-card-inner {
+    flex-direction: column;
+    align-items: flex-start;
+    padding: 14px;
+  }
+  .plan-card.plan-selected .plan-price-accent {
+    font-size: 20px;
+  }
 
   .config-row {
     grid-template-columns: 1fr;
@@ -2748,18 +2860,28 @@ select:focus {
     padding: 20px 20px 24px;
   }
 
-  .form-actions {
-    flex-direction: column-reverse;
-    align-items: stretch;
-  }
-
-  .form-actions .btn {
-    width: 100%;
-  }
-
   #step2 .form-actions,
   #step3 .form-actions {
     left: 0;
+    flex-wrap: wrap;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 8px 16px 10px;
+  }
+  #step2 .form-actions .bottom-bar-price,
+  #step3 .form-actions .bottom-bar-price {
+    order: -1;
+    width: 100%;
+    text-align: center;
+    margin: 0;
+    font-size: 1.1rem;
+  }
+  #step2 .form-actions .btn,
+  #step3 .form-actions .btn {
+    flex: 1;
+    min-width: 0;
   }
 
   .next-steps-list {
