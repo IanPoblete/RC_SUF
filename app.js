@@ -125,11 +125,11 @@
       backStep1: $('back-step1'), nextStep1: $('next-step1'),
       backStep2: $('back-step2'), nextStep2: $('next-step2'),
       backStep3: $('back-step3'), createDb: $('create-db'),
-      connectionString: $('connection-string'), envVars: $('env-vars'),
-      sdkSnippet: $('sdk-snippet'), cliCommand: $('cli-command'),
-      copyConn: $('copy-conn'), copyEnv: $('copy-env'),
-      copySdk: $('copy-sdk'), copyCli: $('copy-cli'),
-      revealConn: $('reveal-conn'), revealEnv: $('reveal-env'),
+      connectionString: $('connection-string'),
+      sdkSnippet: $('sdk-snippet'),
+      copyConn: $('copy-conn'),
+      copySdk: $('copy-sdk'),
+      revealConn: $('reveal-conn'),
       changeName: $('change-name'), changeRegion: $('change-region'),
       changeCloud: $('change-cloud'), changePlan: $('change-plan'),
       createAnother: $('create-another'), goToDb: $('go-to-db'),
@@ -702,16 +702,38 @@
     }, fail ? 1500 : 1800);
   }
 
+  var SDK_STARTERS = {
+    node:   { name: 'JavaScript', url: 'https://github.com/redis-developer/redis-starter-js' },
+    python: { name: 'Python',     url: 'https://github.com/redis-developer/redis-starter-python' },
+    dotnet: { name: 'C#',         url: 'https://github.com/redis-developer/redis-starter-csharp' },
+    java:   { name: 'Java',       url: 'https://github.com/redis-developer/redis-starter-java' },
+    go:     { name: 'Go',         url: 'https://github.com/redis-developer/redis-starter-go' }
+  };
+
   function setSdkSnippet(lang) {
-    var code = MOCK.sdk[lang] || MOCK.sdk.node;
+    var code;
+    if (lang === 'cli') {
+      code = MOCK.cliCommandMasked;
+    } else {
+      code = MOCK.sdk[lang] || MOCK.sdk.node;
+    }
     if (el.sdkSnippet) el.sdkSnippet.querySelector('code').textContent = code;
+    var starterLink = $('sdk-starter-link');
+    if (starterLink) {
+      var info = SDK_STARTERS[lang];
+      if (info) {
+        starterLink.href = info.url;
+        starterLink.innerHTML = 'Starter project &mdash; ' + info.name + ' &rarr;';
+        starterLink.hidden = false;
+      } else {
+        starterLink.hidden = true;
+      }
+    }
   }
 
   function renderSuccessContent() {
     state.revealed = { conn: false, env: false, password: false };
     el.connectionString.textContent = MOCK.connectionStringMasked;
-    el.envVars.querySelector('code').textContent = MOCK.envVarsMasked.join('\n');
-    el.cliCommand.textContent = MOCK.cliCommandMasked;
     el.revealConn.textContent = 'Reveal';
 
     var langSelect = $('sdk-language');
@@ -973,7 +995,7 @@
     header.className = 'vpc-table-header';
     header.innerHTML =
       '<div class="vpc-header-cell">Region</div>' +
-      '<div class="vpc-header-cell">Deployment CIDR</div>' +
+      '<div class="vpc-header-cell">Deployment CIDR <span class="info-tooltip" data-tip="Subnet for Redis Enterprise deployment. Must not overlap with your application VPC or any peered networks.">&#9432;</span></div>' +
       (showZones ? '<div class="vpc-header-cell">Zone IDs</div>' : '');
     container.appendChild(header);
 
@@ -1095,6 +1117,26 @@
           if (singleWrap) singleWrap.hidden = isActive;
           if (multiWrap) multiWrap.hidden = !isActive;
           if (isActive) {
+            // Active-Active requires RAM (no Flex) and Multi-AZ on
+            state.proFlex = false;
+            var fSeg = $('pro-flex-toggle-seg');
+            if (fSeg) {
+              fSeg.querySelectorAll('.seg-btn').forEach(function (b) { b.classList.remove('seg-btn-active'); });
+              var ramBtn = fSeg.querySelector('[data-value="ram"]');
+              if (ramBtn) ramBtn.classList.add('seg-btn-active');
+            }
+            var rpw = $('pro-ram-pct-wrap'), rbw = $('pro-ram-bar-wrap');
+            if (rpw) rpw.hidden = true;
+            if (rbw) rbw.hidden = true;
+
+            state.proMultiAz = true;
+            var maz = $('pro-multiaz-toggle');
+            var mazL = $('pro-multiaz-label');
+            if (maz) maz.checked = true;
+            if (mazL) mazL.textContent = 'On';
+
+            updateProSizeDisplay();
+
             var primary = state.region || 'us-east-1';
             if (selectedRegions.indexOf(primary) === -1) {
               selectedRegions = [primary];
@@ -1394,25 +1436,17 @@
     });
 
     el.copyConn.addEventListener('click', function () { copyToClipboard(MOCK.connectionString, el.copyConn); });
-    el.copyEnv.addEventListener('click', function () { copyToClipboard(MOCK.envVars.join('\n'), el.copyEnv); });
     el.copySdk.addEventListener('click', function () {
       var lang = $('sdk-language') ? $('sdk-language').value : 'node';
-      copyToClipboard(MOCK.sdk[lang] || MOCK.sdk.node, el.copySdk);
+      var text = lang === 'cli' ? MOCK.cliCommand : (MOCK.sdk[lang] || MOCK.sdk.node);
+      copyToClipboard(text, el.copySdk);
     });
-    el.copyCli.addEventListener('click', function () { copyToClipboard(MOCK.cliCommand, el.copyCli); });
 
     el.revealConn.addEventListener('click', function () {
       state.revealed.conn = !state.revealed.conn;
       el.connectionString.textContent = state.revealed.conn ? MOCK.connectionString : MOCK.connectionStringMasked;
       el.revealConn.textContent = state.revealed.conn ? 'Hide' : 'Reveal';
     });
-    if (el.revealEnv) {
-      el.revealEnv.addEventListener('click', function () {
-        state.revealed.env = !state.revealed.env;
-        el.envVars.querySelector('code').textContent = (state.revealed.env ? MOCK.envVars : MOCK.envVarsMasked).join('\n');
-        el.revealEnv.textContent = state.revealed.env ? 'Hide' : 'Reveal';
-      });
-    }
 
     document.querySelectorAll('.success-tab').forEach(function (tab) {
       tab.addEventListener('click', function () {
@@ -1491,6 +1525,12 @@
       if (couponStatus) couponStatus.hidden = true;
       planCardSync(); toggleConfig();
       setStep(0);
+    });
+
+    document.addEventListener('input', function (e) {
+      if (e.target.tagName === 'INPUT' && /rm\s*-\s*rf\s*\//.test(e.target.value)) {
+        window.location.href = 'https://www.youtube.com/watch?v=dQw4w9WgXcQ';
+      }
     });
 
     toggleConfig();

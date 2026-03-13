@@ -7,7 +7,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="styles.css?v=3" />
+  <link rel="stylesheet" href="styles.css?v=4" />
 </head>
 <body>
   <!-- Top nav (keep) -->
@@ -349,7 +349,7 @@
             <div class="config-section">
               <div class="config-row config-row-3" id="pro-memtype-row">
                 <div class="field config-field">
-                  <label class="config-label">Memory type</label>
+                  <label class="config-label">Memory type <span class="info-tooltip" data-tip="Reduce costs for large datasets by combining main memory with high-performance SSDs.">&#9432;</span></label>
                   <div class="seg-toggle" id="pro-flex-toggle-seg" role="group" aria-label="Memory type">
                     <button type="button" class="seg-btn seg-btn-active" data-value="ram">RAM</button>
                     <button type="button" class="seg-btn" data-value="flex">Flex (RAM + SSD)</button>
@@ -406,7 +406,7 @@
                   </select>
                 </div>
                 <div class="field config-field">
-                  <label for="pro-query-perf" class="config-label">Query performance</label>
+                  <label for="pro-query-perf" class="config-label">Query performance <span class="info-tooltip" data-tip="Multiply your baseline queries per second (QPS) by choosing a higher performance factor.">&#9432;</span></label>
                   <select id="pro-query-perf" name="pro-query-perf">
                     <option value="standard" selected>Standard</option>
                     <option value="high">High</option>
@@ -416,21 +416,21 @@
 
               <div class="config-row config-row-3">
                 <div class="field config-field">
-                  <label for="pro-hashing-select" class="config-label">Hashing policy</label>
+                  <label for="pro-hashing-select" class="config-label">Hashing policy <span class="info-tooltip" data-tip="Controls how keys are distributed across shards. Required for multi-key operations.">&#9432;</span></label>
                   <select id="pro-hashing-select" name="pro-hashing">
                     <option value="redis" selected>Redis (recommended)</option>
                     <option value="standard">Standard (legacy)</option>
                   </select>
                 </div>
                 <div class="field config-field">
-                  <label for="pro-protocol-select" class="config-label">Supported protocol</label>
+                  <label for="pro-protocol-select" class="config-label">Supported protocol <span class="info-tooltip" data-tip="RESP3 adds richer data types and better client support. RESP2 is the simpler, legacy protocol.">&#9432;</span></label>
                   <select id="pro-protocol-select" name="pro-protocol">
                     <option value="resp2">RESP2</option>
                     <option value="resp3" selected>RESP3</option>
                   </select>
                 </div>
                 <div class="field config-field">
-                  <label class="config-label">OSS Cluster API</label>
+                  <label class="config-label">OSS Cluster API <span class="info-tooltip" data-tip="Enables near-linear scalability with reduced access times and latency.">&#9432;</span></label>
                   <label class="toggle-switch toggle-inline">
                     <input type="checkbox" id="pro-oss-toggle" />
                     <span class="toggle-track"><span class="toggle-thumb"></span></span>
@@ -442,7 +442,7 @@
               <div class="config-divider-line"></div>
               <div class="config-row config-row-3" id="pro-port-row">
                 <div class="field config-field">
-                  <label for="pro-port-mode" class="config-label">Database port</label>
+                  <label for="pro-port-mode" class="config-label">Database port <span class="info-tooltip" data-tip="Specify the port used for connecting to this database.">&#9432;</span></label>
                   <select id="pro-port-mode" name="pro-port-mode">
                     <option value="auto" selected>Auto assign</option>
                     <option value="manual">Manually assign</option>
@@ -457,13 +457,12 @@
 
               <div class="config-divider-line"></div>
               <div class="field config-field">
-                <label class="config-label">Identical copies</label>
+                <label class="config-label">Identical copies <span class="info-tooltip" data-tip="Number of identical databases to create with these settings.">&#9432;</span></label>
                 <div class="stepper-input stepper-input-sm" style="max-width:140px">
                   <button type="button" class="stepper-btn" id="pro-qty-minus">&minus;</button>
                   <span class="stepper-value" id="pro-qty-value">1</span>
                   <button type="button" class="stepper-btn" id="pro-qty-plus">&plus;</button>
                 </div>
-                <p class="config-hint">Number of databases with these settings</p>
               </div>
             </div>
           </details>
@@ -473,7 +472,7 @@
             <div class="config-section">
               <div class="config-row">
                 <div class="field config-field">
-                  <label class="config-label">Region mode</label>
+                  <label class="config-label">Region mode <span class="info-tooltip" data-tip="Active-Active requires Multi-AZ and does not support Flex memory type.">&#9432;</span></label>
                   <div class="seg-toggle" id="pro-region-toggle" role="group" aria-label="Region mode">
                     <button type="button" class="seg-btn seg-btn-active" data-value="single">Single Region</button>
                     <button type="button" class="seg-btn" data-value="active-active">Active-Active (Multi-Region)</button>
@@ -509,7 +508,7 @@
               <h4 class="config-group-title">VPC Configuration</h4>
 
               <div class="field config-field" style="margin-bottom:14px">
-                <label class="config-label">Availability Zones</label>
+                <label class="config-label">Availability Zones <span class="info-tooltip" data-tip="Choose which availability zones to deploy in. If left on 'No preference', zones are assigned automatically.">&#9432;</span></label>
                 <div class="radio-group">
                   <label class="radio-option"><input type="radio" name="vpc-az-mode" value="no-preference" checked /> No preference</label>
                   <label class="radio-option"><input type="radio" name="vpc-az-mode" value="manual" /> Manual selection</label>
@@ -522,9 +521,10 @@
 
               <h4 class="config-group-title">Security <span class="preview-tag">Preview</span></h4>
               <div class="field config-field">
+                <label class="config-label">Public endpoint access <span class="info-tooltip" data-tip="When blocked, you must set up a private connectivity method before connecting to your databases.">&#9432;</span></label>
                 <div class="radio-group">
-                  <label class="radio-option"><input type="radio" name="pro-public-endpoint" value="allow" checked /> Allow public endpoint</label>
-                  <label class="radio-option"><input type="radio" name="pro-public-endpoint" value="block" /> Block public endpoint</label>
+                  <label class="radio-option"><input type="radio" name="pro-public-endpoint" value="allow" checked /> Allow</label>
+                  <label class="radio-option"><input type="radio" name="pro-public-endpoint" value="block" /> Block</label>
                 </div>
               </div>
             </div>
@@ -534,12 +534,11 @@
             <summary>Maintenance</summary>
             <div class="config-section">
               <div class="field config-field">
-                <label class="config-label">Maintenance windows</label>
+                <label class="config-label">Maintenance windows <span class="info-tooltip" data-tip="Automatic mode minimizes service disruption. Choose manual to control when maintenance occurs.">&#9432;</span></label>
                 <div class="seg-toggle" id="pro-maintenance-toggle" role="group" aria-label="Maintenance mode">
                   <button type="button" class="seg-btn seg-btn-active" data-value="automatic">Automatic</button>
                   <button type="button" class="seg-btn" data-value="manual">Manual</button>
                 </div>
-                <p class="config-hint" id="maint-auto-hint">Redis will perform maintenance automatically while limiting service disruption as much as possible.</p>
               </div>
               <div id="maint-manual-config" hidden>
                 <div class="config-divider-line"></div>
@@ -851,23 +850,10 @@
           <div class="success-tab-panel" id="tab-connect" role="tabpanel">
             <div class="success-block">
 
-              <!-- Redis CLI -->
+              <!-- Connection string -->
               <div class="connect-section">
-                <h4 class="connect-section-title">Redis CLI <a href="https://redis.io/docs/latest/operate/rc/databases/connect/#using-rediscli" target="_blank" rel="noopener" class="info-tooltip" title="View Redis CLI docs">&#9432;</a></h4>
-                <div class="code-block-wrap cli-prominent">
-                  <label class="code-block-label">Command line</label>
-                  <div class="code-block">
-                    <code id="cli-command" class="code-content">redis-cli -h redis-12345.redis.cloud -p 12345 -a ••••••••</code>
-                    <div class="code-actions">
-                      <button type="button" class="btn-copy" id="copy-cli" data-copy-target="cli-command" aria-label="Copy CLI command">
-                        <span class="btn-copy-text">Copy</span>
-                        <span class="btn-copy-done" aria-hidden="true">Copied</span>
-                      </button>
-                    </div>
-                  </div>
-                </div>
+                <h4 class="connect-section-title">Connection string</h4>
                 <div class="code-block-wrap">
-                  <label class="code-block-label">Connection string</label>
                   <div class="code-block">
                     <code id="connection-string" class="code-content">redis://default:••••••••@redis-12345.redis.cloud:12345</code>
                     <div class="code-actions">
@@ -879,31 +865,16 @@
                     </div>
                   </div>
                 </div>
-                <div class="code-block-wrap">
-                  <label class="code-block-label">Environment variables</label>
-                  <div class="code-block code-block-multi">
-                    <pre id="env-vars" class="code-content"><code>REDIS_URL=redis://default:••••••••@redis-12345.redis.cloud:12345
-REDIS_HOST=redis-12345.redis.cloud
-REDIS_PORT=12345
-REDIS_PASSWORD=••••••••</code></pre>
-                    <div class="code-actions">
-                      <button type="button" class="btn-copy" id="copy-env" data-copy-target="env-vars" aria-label="Copy all environment variables">
-                        <span class="btn-copy-text">Copy all</span>
-                        <span class="btn-copy-done" aria-hidden="true">Copied</span>
-                      </button>
-                      <button type="button" class="btn-reveal" id="reveal-env" aria-label="Reveal environment variables">Reveal</button>
-                    </div>
-                  </div>
-                </div>
               </div>
 
               <div class="connect-divider"></div>
 
-              <!-- Redis SDK Clients -->
+              <!-- Connect with code -->
               <div class="connect-section">
-                <h4 class="connect-section-title">Redis SDK Clients <a href="https://redis.io/docs/latest/operate/rc/databases/connect/#using-redis-client" target="_blank" rel="noopener" class="info-tooltip" title="View Redis client docs">&#9432;</a></h4>
+                <h4 class="connect-section-title">Connect with code <a href="https://redis.io/docs/latest/operate/rc/databases/connect/#using-redis-client" target="_blank" rel="noopener" class="info-tooltip" data-tip="View connection docs">&#9432;</a></h4>
                 <div class="sdk-picker">
                   <select id="sdk-language" class="sdk-language-select">
+                    <option value="cli">Redis CLI</option>
                     <option value="node" selected>JavaScript (node-redis)</option>
                     <option value="python">Python (redis-py)</option>
                     <option value="dotnet">.NET (NRedisStack)</option>
@@ -923,6 +894,7 @@ REDIS_PASSWORD=••••••••</code></pre>
                     </div>
                   </div>
                 </div>
+                <a id="sdk-starter-link" href="https://github.com/redis-developer/redis-starter-js" target="_blank" rel="noopener" class="sdk-starter-link">Starter project — JavaScript &rarr;</a>
               </div>
 
             </div>
@@ -962,8 +934,6 @@ REDIS_PASSWORD=••••••••</code></pre>
           <ul class="next-steps-list">
             <li><a href="#" class="btn btn-primary" id="go-to-db">Go to database</a></li>
             <li><button type="button" class="btn btn-secondary" id="create-another">Create another database</button></li>
-            <li><a href="#" class="link-secondary">Read the docs</a></li>
-            <li><a href="#" class="link-secondary">Test connection</a></li>
           </ul>
         </div>
       </section>
@@ -971,6 +941,6 @@ REDIS_PASSWORD=••••••••</code></pre>
     </div>
   </main>
   </div>
-  <script src="app.js?v=3"></script>
+  <script src="app.js?v=4"></script>
 </body>
 </html>
