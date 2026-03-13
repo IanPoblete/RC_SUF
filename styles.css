@@ -731,8 +731,8 @@ select:focus {
 
 .plan-card.plan-selected .plan-card-inner,
 .plan-card input:checked + .plan-card-inner {
-  border-color: var(--hyper-05);
-  background: rgba(255, 68, 56, 0.08);
+  border-color: var(--accent);
+  background: rgba(220, 255, 30, 0.08);
 }
 
 .plan-card.plan-selected {
@@ -802,22 +802,21 @@ select:focus {
 }
 
 .size-selector-disabled {
-  opacity: 0.5;
   pointer-events: auto;
-  cursor: default;
   position: relative;
+  cursor: default;
 }
 
-.size-selector-disabled * {
+.size-selector-disabled > *:not(.free-tooltip) {
+  opacity: 0.5;
   pointer-events: none;
 }
 
 .free-tooltip {
   display: none;
   position: absolute;
-  top: 50%;
   left: 50%;
-  transform: translate(-50%, -50%);
+  transform: translateX(-50%);
   background: var(--dusk-09);
   border: 1px solid var(--yellow-11);
   border-radius: 6px;
@@ -1199,6 +1198,44 @@ select:focus {
   align-items: center;
   justify-content: space-between;
   gap: 12px;
+  position: relative;
+}
+
+.locked-by-aa {
+  position: relative;
+  cursor: not-allowed;
+}
+
+.locked-by-aa > * {
+  opacity: 0.4;
+  pointer-events: none;
+}
+
+.locked-by-aa::after {
+  content: attr(data-tip);
+  position: absolute;
+  left: 0;
+  top: calc(100% + 4px);
+  background: var(--dusk);
+  color: var(--text-primary);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 6px 10px;
+  font-size: 12px;
+  font-weight: 400;
+  line-height: 1.45;
+  white-space: nowrap;
+  z-index: 1000;
+  pointer-events: none;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+  text-transform: none;
+  letter-spacing: normal;
+  opacity: 0;
+  transition: opacity 0.15s;
+}
+
+.locked-by-aa:hover::after {
+  opacity: 1;
 }
 
 .stepper-input-sm {

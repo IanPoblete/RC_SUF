@@ -373,6 +373,13 @@
       tip.className = 'free-tooltip';
       tip.textContent = 'Unlock more with Essentials';
       el.sizeSelector.appendChild(tip);
+      var track = $('size-slider-track');
+      if (track) {
+        var tOff = track.offsetTop;
+        var tH = track.offsetHeight;
+        tip.style.top = (tOff + tH / 2) + 'px';
+        tip.style.transform = 'translate(-50%, -50%)';
+      }
     }
   }
 
@@ -1116,8 +1123,10 @@
           var isActive = state.proRegionMode === 'active-active';
           if (singleWrap) singleWrap.hidden = isActive;
           if (multiWrap) multiWrap.hidden = !isActive;
+          var multiAzRow = $('pro-multiaz-toggle') ? $('pro-multiaz-toggle').closest('.pro-toggle-row') : null;
+          var memTypeRow = $('pro-memtype-row');
+
           if (isActive) {
-            // Active-Active requires RAM (no Flex) and Multi-AZ on
             state.proFlex = false;
             var fSeg = $('pro-flex-toggle-seg');
             if (fSeg) {
@@ -1135,6 +1144,9 @@
             if (maz) maz.checked = true;
             if (mazL) mazL.textContent = 'On';
 
+            if (multiAzRow) { multiAzRow.classList.add('locked-by-aa'); multiAzRow.setAttribute('data-tip', 'Required by Active-Active'); }
+            if (memTypeRow) { memTypeRow.classList.add('locked-by-aa'); memTypeRow.setAttribute('data-tip', 'Not supported by Active-Active'); }
+
             updateProSizeDisplay();
 
             var primary = state.region || 'us-east-1';
@@ -1144,6 +1156,8 @@
             renderTags();
             syncVpcFromTags();
           } else {
+            if (multiAzRow) { multiAzRow.classList.remove('locked-by-aa'); multiAzRow.removeAttribute('data-tip'); }
+            if (memTypeRow) { memTypeRow.classList.remove('locked-by-aa'); memTypeRow.removeAttribute('data-tip'); }
             refreshVpcBlocks([proRegion ? proRegion.value : 'us-east-1']);
           }
         });
@@ -1498,6 +1512,10 @@
       if (proMultiAz) proMultiAz.checked = false;
       var proMultiAzLbl = $('pro-multiaz-label');
       if (proMultiAzLbl) proMultiAzLbl.textContent = 'Off';
+      var multiAzRow = proMultiAz ? proMultiAz.closest('.pro-toggle-row') : null;
+      if (multiAzRow) { multiAzRow.classList.remove('locked-by-aa'); multiAzRow.removeAttribute('data-tip'); }
+      var memTypeRow = $('pro-memtype-row');
+      if (memTypeRow) { memTypeRow.classList.remove('locked-by-aa'); memTypeRow.removeAttribute('data-tip'); }
       var ramPctWrap = $('pro-ram-pct-wrap');
       if (ramPctWrap) ramPctWrap.hidden = true;
       var ramBarWrap = $('pro-ram-bar-wrap');
