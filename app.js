@@ -619,7 +619,7 @@
 
     var btnText = el.createDb.querySelector('.btn-text');
     if (btnText) {
-      btnText.textContent = plan !== 'free' ? 'Pay & Create Database' : 'Create database';
+      btnText.textContent = plan !== 'free' ? 'Pay & create database' : 'Create database';
     }
   }
 
@@ -641,7 +641,7 @@
   function updateStep2Button() {
     var plan = getSelectedPlan();
     if (plan !== 'free' && !state.paymentMethodAdded) {
-      el.nextStep2.textContent = 'Add Payment Method';
+      el.nextStep2.textContent = 'Add payment method';
     } else {
       el.nextStep2.textContent = 'Next';
     }
