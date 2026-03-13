@@ -1,0 +1,951 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Create Redis database</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <!-- Top nav (keep) -->
+  <header class="top-nav" role="banner">
+    <div class="top-nav-left">
+      <a href="#" class="top-nav-logo" aria-label="Redis home">
+        <img src="redis-logo.svg" alt="Redis" class="top-nav-logo-img" />
+      </a>
+      <button type="button" class="top-nav-back" aria-label="Back">&lt;</button>
+      <span class="demo-pill" id="demo-banner">DEMO <button type="button" class="demo-pill-close" id="demo-close" aria-label="Exit demo mode">✕</button></span>
+    </div>
+    <div class="top-nav-right">
+      <button type="button" class="top-nav-icon" aria-label="Apps">⊞</button>
+      <button type="button" class="top-nav-icon" aria-label="Help">💡</button>
+      <button type="button" class="top-nav-icon" aria-label="History">🕐</button>
+      <span class="top-nav-user">Rowan Trollope</span>
+      <span class="top-nav-user-short">Rowan</span>
+      <span class="top-nav-avatar" aria-hidden="true">RT</span>
+    </div>
+  </header>
+
+  <div class="app-shell">
+    <!-- Left sidebar (keep) -->
+    <aside class="sidebar" role="navigation" aria-label="Main">
+      <nav class="sidebar-nav">
+        <a href="#" class="sidebar-item sidebar-item-active">
+          <span class="sidebar-item-icon">+</span>
+          <span>Databases</span>
+        </a>
+        <a href="#" class="sidebar-item">Subscriptions</a>
+        <a href="#" class="sidebar-item">LangCache</a>
+        <a href="#" class="sidebar-item">Data Integration</a>
+        <a href="#" class="sidebar-item">Data Access Control</a>
+        <a href="#" class="sidebar-item">Access Management</a>
+        <a href="#" class="sidebar-item">Logs</a>
+        <a href="#" class="sidebar-item">Account Settings</a>
+        <a href="#" class="sidebar-item">Usage Report</a>
+        <a href="#" class="sidebar-item">Billing &amp; Payments</a>
+        <a href="#" class="sidebar-item">Redis Copilot ↗</a>
+        <a href="#" class="sidebar-item">Download Center</a>
+        <a href="#" class="sidebar-item">Support ↗</a>
+        <a href="#" class="sidebar-item">Documentation ↗</a>
+      </nav>
+      <footer class="sidebar-footer">
+        <a href="#">Terms</a> | <a href="#">Privacy</a><br />
+        © 2026 Redis
+      </footer>
+    </aside>
+
+    <!-- Main content: create database flow -->
+  <main class="page">
+    <div class="container">
+      <header class="header" id="main-header">
+        <h1 class="header-title">Create Redis database</h1>
+      </header>
+
+      <!-- Pre-step: Quick Start vs Custom -->
+      <section class="pre-step" id="pre-step">
+        <p class="pre-step-desc">How would you like to get started?</p>
+        <div class="pre-step-cards">
+          <button type="button" class="pre-step-card pre-step-quickstart" id="btn-quickstart">
+            <span class="pre-step-card-content">
+              <span class="pre-step-card-title">Quick Start</span>
+              <span class="pre-step-card-subtitle">Start now for Free</span>
+              <span class="pre-step-card-desc">Instantly provisions a free 30 MB database with default settings.<br/>No configuration needed.</span>
+            </span>
+            <span class="pre-step-cta pre-step-cta-primary">Get started</span>
+          </button>
+          <button type="button" class="pre-step-card pre-step-custom" id="btn-custom-create">
+            <span class="pre-step-card-content">
+              <span class="pre-step-card-title">Custom Create</span>
+              <span class="pre-step-card-subtitle">Choose plan, region &amp; size</span>
+              <span class="pre-step-card-desc">Full control over plan, region, memory, high availability, and advanced settings.</span>
+            </span>
+            <span class="pre-step-cta pre-step-cta-primary">Configure</span>
+          </button>
+        </div>
+      </section>
+
+      <!-- Quick Start modal -->
+      <div class="modal-overlay" id="quickstart-modal" hidden>
+        <div class="modal-box quickstart-modal-box">
+          <button type="button" class="modal-close" id="quickstart-modal-close" aria-label="Close">&times;</button>
+          <h3 class="modal-title">Quick Start</h3>
+          <p class="modal-desc">Select your cloud provider and region to create a free database.</p>
+          <div class="field" style="margin-bottom:16px">
+            <label for="qs-cloud" class="config-label">Cloud provider</label>
+            <select id="qs-cloud" name="qs-cloud">
+              <option value="aws" selected>AWS</option>
+              <option value="gcp">Google Cloud</option>
+              <option value="azure">Microsoft Azure</option>
+            </select>
+          </div>
+          <div class="field" style="margin-bottom:24px">
+            <label for="qs-region" class="config-label">Region</label>
+            <select id="qs-region" name="qs-region">
+              <option value="us-east-1" selected>US East (N. Virginia)</option>
+              <option value="eu-west-1">EU (Ireland)</option>
+              <option value="ap-southeast-1">Asia Pacific (Singapore)</option>
+              <option value="us-west-2">US West (Oregon)</option>
+              <option value="eu-central-1">EU (Frankfurt)</option>
+            </select>
+          </div>
+          <button type="button" class="btn btn-primary" id="qs-confirm" style="width:100%">Create Database</button>
+        </div>
+      </div>
+
+      <!-- Stepper: visible on steps 1–3 -->
+      <nav class="stepper" id="stepper" aria-label="Progress" hidden>
+        <ol class="stepper-list">
+          <li class="stepper-item" data-step="1">
+            <span class="stepper-dot" aria-hidden="true">1</span>
+            <span class="stepper-label">Setup</span>
+          </li>
+          <li class="stepper-item" data-step="2">
+            <span class="stepper-dot" aria-hidden="true">2</span>
+            <span class="stepper-label">Select Plan</span>
+          </li>
+          <li class="stepper-item" data-step="3">
+            <span class="stepper-dot" aria-hidden="true">3</span>
+            <span class="stepper-label">Review</span>
+          </li>
+        </ol>
+      </nav>
+
+      <!-- Step 1: Name and region -->
+      <section class="card step-panel" id="step1" aria-labelledby="step1-title" hidden>
+        <h2 id="step1-title" class="step-title">Name and region</h2>
+        <p class="step-desc">Where your data lives; pick one close to your app.</p>
+
+        <form id="form-step1" class="form" novalidate>
+          <div class="field">
+            <label for="db-name">Database name</label>
+            <input
+              type="text"
+              id="db-name"
+              name="db-name"
+              autocomplete="off"
+              value="my-redis-db"
+              placeholder="e.g. my-app-cache"
+              maxlength="64"
+              aria-describedby="db-name-hint db-name-error"
+              aria-invalid="false"
+            />
+            <p id="db-name-hint" class="hint">3–64 characters; letters, numbers, hyphens, and underscores only.</p>
+            <p id="db-name-error" class="error" role="alert" aria-live="polite" hidden></p>
+          </div>
+
+          <div class="field-row">
+            <div class="field">
+              <label for="cloud-vendor">Cloud vendor</label>
+              <select id="cloud-vendor" name="cloud-vendor" aria-describedby="region-error">
+                <option value="aws" selected>AWS</option>
+                <option value="gcp">Google Cloud</option>
+                <option value="azure">Microsoft Azure</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="region">Primary region</label>
+              <select id="region" name="region" aria-describedby="region-error">
+                <option value="us-east-1" selected>US East (N. Virginia)</option>
+                <option value="eu-west-1">EU (Ireland)</option>
+                <option value="ap-southeast-1">Asia Pacific (Singapore)</option>
+              </select>
+              <p id="region-error" class="error" role="alert" aria-live="polite" hidden></p>
+            </div>
+          </div>
+
+          <div class="form-actions">
+            <button type="button" class="btn btn-secondary" id="back-step1" disabled>Back</button>
+            <button type="submit" class="btn btn-primary" id="next-step1">Next</button>
+          </div>
+        </form>
+      </section>
+
+      <!-- Step 2: Select plan -->
+      <section class="card step-panel" id="step2" aria-labelledby="step2-title" hidden>
+        <div class="plan-cards" role="group" aria-label="Plan">
+          <label class="plan-card">
+            <input type="radio" name="plan" value="free" />
+            <span class="plan-card-inner">
+              <span class="plan-name">Free</span>
+              <span class="plan-price plan-price-accent">$0</span>
+              <span class="plan-detail-grid">
+                <span class="plan-detail-label">Storage</span>
+                <span class="plan-detail-value">30 MB</span>
+                <span class="plan-detail-label">Infra</span>
+                <span class="plan-detail-value">Shared</span>
+                <span class="plan-detail-label">Billing</span>
+                <span class="plan-detail-value">Free forever</span>
+              </span>
+            </span>
+          </label>
+          <label class="plan-card plan-selected">
+            <input type="radio" name="plan" value="essentials" checked />
+            <span class="plan-card-inner">
+              <span class="plan-name">Essentials (with Flex)</span>
+              <span class="plan-price plan-price-accent">From $5/mo</span>
+              <span class="plan-detail-grid">
+                <span class="plan-detail-label">Storage</span>
+                <span class="plan-detail-value">250 MB – 100 GB</span>
+                <span class="plan-detail-label">Infra</span>
+                <span class="plan-detail-value">Shared</span>
+                <span class="plan-detail-label">Billing</span>
+                <span class="plan-detail-value">Fixed monthly</span>
+              </span>
+            </span>
+          </label>
+          <label class="plan-card">
+            <input type="radio" name="plan" value="pro" />
+            <span class="plan-card-inner">
+              <span class="plan-name">Pro</span>
+              <span class="plan-price plan-price-accent">From $200/mo</span>
+              <span class="plan-detail-grid">
+                <span class="plan-detail-label">Storage</span>
+                <span class="plan-detail-value">Unlimited</span>
+                <span class="plan-detail-label">Infra</span>
+                <span class="plan-detail-value">Dedicated</span>
+                <span class="plan-detail-label">Billing</span>
+                <span class="plan-detail-value">Pay by usage</span>
+              </span>
+            </span>
+          </label>
+        </div>
+        <!-- Size selector — primary decision, shown for Essentials -->
+        <div class="size-selector" id="size-selector" hidden>
+          <div class="size-selector-header">
+            <div class="seg-toggle" id="memory-toggle" role="group" aria-label="Memory type">
+              <button type="button" class="seg-btn seg-btn-active" data-value="ram">RAM</button>
+              <button type="button" class="seg-btn" data-value="flex">Flex (RAM + SSD)</button>
+            </div>
+          </div>
+          <div class="size-slider-track" id="size-slider-track" role="group" aria-label="Plan size">
+            <div class="size-slider-fill" id="size-slider-fill"></div>
+          </div>
+          <div class="size-selector-details" id="size-details">
+            <div class="size-detail-item">
+              <span class="size-detail-label">Dataset</span>
+              <span class="size-detail-value" id="size-detail-memory">250 MB</span>
+            </div>
+            <div class="size-detail-item" id="size-detail-replica-row" hidden>
+              <span class="size-detail-label">Replica</span>
+              <span class="size-detail-value" id="size-detail-replica">—</span>
+            </div>
+            <div class="size-detail-item">
+              <span class="size-detail-label">Max Throughput</span>
+              <span class="size-detail-value" id="size-detail-ops">1,000 ops/sec</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Pro size selector: dataset, throughput, HA, Multi-AZ -->
+        <div class="pro-size-selector" id="pro-size-selector" hidden>
+          <div class="pro-size-controls">
+            <div class="stepper-control">
+              <label class="stepper-label-text">Dataset size (GB)</label>
+              <div class="stepper-input">
+                <button type="button" class="stepper-btn" id="pro-ds-minus" aria-label="Decrease dataset size">&minus;</button>
+                <span class="stepper-value" id="pro-ds-value">3 GB</span>
+                <button type="button" class="stepper-btn" id="pro-ds-plus" aria-label="Increase dataset size">&plus;</button>
+              </div>
+              <p class="pro-total-memory">Total memory <span id="pro-total-mem">3 GB</span></p>
+            </div>
+            <div class="stepper-control">
+              <label class="stepper-label-text">Throughput (Ops/sec)</label>
+              <div class="stepper-input">
+                <button type="button" class="stepper-btn" id="pro-tp-minus" aria-label="Decrease throughput">&minus;</button>
+                <span class="stepper-value" id="pro-tp-value">3000 Ops/sec</span>
+                <button type="button" class="stepper-btn" id="pro-tp-plus" aria-label="Increase throughput">&plus;</button>
+              </div>
+            </div>
+          </div>
+          <div class="pro-toggle-row-group">
+            <div class="pro-toggle-row">
+              <label class="stepper-label-text">High Availability</label>
+              <label class="toggle-switch toggle-inline">
+                <input type="checkbox" id="pro-ha-toggle" />
+                <span class="toggle-track"><span class="toggle-thumb"></span></span>
+                <span class="toggle-text" id="pro-ha-label">Off</span>
+              </label>
+            </div>
+            <div class="pro-toggle-row">
+              <label class="stepper-label-text">Multi-AZ</label>
+              <label class="toggle-switch toggle-inline">
+                <input type="checkbox" id="pro-multiaz-toggle" />
+                <span class="toggle-track"><span class="toggle-thumb"></span></span>
+                <span class="toggle-text" id="pro-multiaz-label">Off</span>
+              </label>
+            </div>
+          </div>
+        </div>
+
+        <!-- Essentials-only: HA & Persistence -->
+        <div id="essentials-advanced-wrap">
+          <details class="advanced-details" id="advanced-details">
+            <summary>Advanced settings</summary>
+            <div class="config-section" id="config-section">
+              <div class="config-row" id="shared-ha-persist-row">
+                <div class="field config-field">
+                  <label for="ha-select" class="config-label">High availability</label>
+                  <select id="ha-select" name="ha-select">
+                    <option value="none" selected>None</option>
+                    <option value="single-zone">Single zone</option>
+                    <option value="multi-zone">Multi-zone</option>
+                  </select>
+                </div>
+                <div class="field config-field">
+                  <label for="persistence-select" class="config-label">Data persistence</label>
+                  <select id="persistence-select" name="persistence-select">
+                    <option value="none" selected>None</option>
+                    <option value="aof-1">Append-only file every 1 sec</option>
+                    <option value="aof-always">Append-only file always</option>
+                    <option value="snapshot-1h">Snapshot every 1 hour</option>
+                    <option value="snapshot-6h">Snapshot every 6 hours</option>
+                    <option value="snapshot-12h">Snapshot every 12 hours</option>
+                  </select>
+                </div>
+              </div>
+              <div class="field config-field">
+                <label for="db-version" class="config-label">Database version</label>
+                <select id="db-version" name="db-version" class="config-select-sm">
+                  <option value="7.2">7.2</option>
+                  <option value="8.2">8.2</option>
+                  <option value="8.4" selected>8.4</option>
+                </select>
+              </div>
+              <p class="plan-includes-config">All plans include encryption in transit &amp; at rest, RBAC, and SSO.</p>
+            </div>
+          </details>
+        </div>
+
+        <!-- Pro-only: 3 collapsible groups -->
+        <div id="pro-config" class="pro-advanced-groups" hidden>
+
+          <details class="advanced-details advanced-group">
+            <summary>Performance &amp; Storage</summary>
+            <div class="config-section">
+              <div class="config-row config-row-3" id="pro-memtype-row">
+                <div class="field config-field">
+                  <label class="config-label">Memory type</label>
+                  <div class="seg-toggle" id="pro-flex-toggle-seg" role="group" aria-label="Memory type">
+                    <button type="button" class="seg-btn seg-btn-active" data-value="ram">RAM</button>
+                    <button type="button" class="seg-btn" data-value="flex">Flex (RAM + SSD)</button>
+                  </div>
+                </div>
+                <div class="field config-field config-field-rampct" id="pro-ram-pct-wrap" hidden>
+                  <label class="config-label">RAM percentage</label>
+                  <div class="ratio-picker" id="ratio-picker" role="group" aria-label="RAM percentage">
+                    <button type="button" class="ratio-option" data-value="10">10%</button>
+                    <button type="button" class="ratio-option ratio-option-active" data-value="20">20%</button>
+                    <button type="button" class="ratio-option" data-value="30">30%</button>
+                    <button type="button" class="ratio-option" data-value="40">40%</button>
+                    <button type="button" class="ratio-option" data-value="50">50%</button>
+                  </div>
+                </div>
+                <div class="field config-field config-field-rampct" id="pro-ram-bar-wrap" hidden>
+                  <label class="config-label">Allocation</label>
+                  <div class="ratio-bar">
+                    <div class="ratio-bar-ram" id="ram-ssd-bar-fill" style="width:20%">
+                      <span class="ratio-bar-label" id="ram-pct-label">20%</span>
+                    </div>
+                    <div class="ratio-bar-ssd">
+                      <span class="ratio-bar-label" id="ssd-pct-label">80%</span>
+                    </div>
+                  </div>
+                  <div class="ratio-legend">
+                    <span class="ratio-legend-item"><span class="ram-dot"></span> RAM <span id="ram-size-label">—</span></span>
+                    <span class="ratio-legend-item"><span class="ssd-dot"></span> SSD <span id="ssd-size-label">—</span></span>
+                  </div>
+                </div>
+              </div>
+
+              <div class="config-divider-line"></div>
+
+              <div class="config-row config-row-3">
+                <div class="field config-field">
+                  <label for="pro-db-version" class="config-label">Database version</label>
+                  <select id="pro-db-version" name="pro-db-version">
+                    <option value="7.2">7.2</option>
+                    <option value="8.2">8.2</option>
+                    <option value="8.4" selected>8.4</option>
+                  </select>
+                  <label class="config-checkbox"><input type="checkbox" checked /> Auto upgrade minor versions</label>
+                </div>
+                <div class="field config-field">
+                  <label for="pro-persistence" class="config-label">Data persistence</label>
+                  <select id="pro-persistence" name="pro-persistence">
+                    <option value="none" selected>None</option>
+                    <option value="aof-1">AOF every 1 sec</option>
+                    <option value="aof-always">AOF always</option>
+                    <option value="snapshot-1h">Snapshot every 1 hr</option>
+                    <option value="snapshot-6h">Snapshot every 6 hr</option>
+                    <option value="snapshot-12h">Snapshot every 12 hr</option>
+                  </select>
+                </div>
+                <div class="field config-field">
+                  <label for="pro-query-perf" class="config-label">Query performance</label>
+                  <select id="pro-query-perf" name="pro-query-perf">
+                    <option value="standard" selected>Standard</option>
+                    <option value="high">High</option>
+                  </select>
+                </div>
+              </div>
+
+              <div class="config-row config-row-3">
+                <div class="field config-field">
+                  <label for="pro-hashing-select" class="config-label">Hashing policy</label>
+                  <select id="pro-hashing-select" name="pro-hashing">
+                    <option value="redis" selected>Redis (recommended)</option>
+                    <option value="standard">Standard (legacy)</option>
+                  </select>
+                </div>
+                <div class="field config-field">
+                  <label for="pro-protocol-select" class="config-label">Supported protocol</label>
+                  <select id="pro-protocol-select" name="pro-protocol">
+                    <option value="resp2">RESP2</option>
+                    <option value="resp3" selected>RESP3</option>
+                  </select>
+                </div>
+                <div class="field config-field">
+                  <label class="config-label">OSS Cluster API</label>
+                  <label class="toggle-switch toggle-inline">
+                    <input type="checkbox" id="pro-oss-toggle" />
+                    <span class="toggle-track"><span class="toggle-thumb"></span></span>
+                    <span class="toggle-text" id="pro-oss-label">Off</span>
+                  </label>
+                </div>
+              </div>
+
+              <div class="config-divider-line"></div>
+              <div class="config-row config-row-3" id="pro-port-row">
+                <div class="field config-field">
+                  <label for="pro-port-mode" class="config-label">Database port</label>
+                  <select id="pro-port-mode" name="pro-port-mode">
+                    <option value="auto" selected>Auto assign</option>
+                    <option value="manual">Manually assign</option>
+                  </select>
+                </div>
+                <div class="field config-field" id="pro-port-input-wrap" hidden>
+                  <label for="pro-port" class="config-label">Port number</label>
+                  <input type="text" id="pro-port" name="pro-port" placeholder="10000 - 19999" class="config-input-sm" style="max-width:100%" />
+                </div>
+                <div></div>
+              </div>
+
+              <div class="config-divider-line"></div>
+              <div class="field config-field">
+                <label class="config-label">Identical copies</label>
+                <div class="stepper-input stepper-input-sm" style="max-width:140px">
+                  <button type="button" class="stepper-btn" id="pro-qty-minus">&minus;</button>
+                  <span class="stepper-value" id="pro-qty-value">1</span>
+                  <button type="button" class="stepper-btn" id="pro-qty-plus">&plus;</button>
+                </div>
+                <p class="config-hint">Number of databases with these settings</p>
+              </div>
+            </div>
+          </details>
+
+          <details class="advanced-details advanced-group">
+            <summary>Networking &amp; Security</summary>
+            <div class="config-section">
+              <div class="config-row">
+                <div class="field config-field">
+                  <label class="config-label">Region mode</label>
+                  <div class="seg-toggle" id="pro-region-toggle" role="group" aria-label="Region mode">
+                    <button type="button" class="seg-btn seg-btn-active" data-value="single">Single Region</button>
+                    <button type="button" class="seg-btn" data-value="active-active">Active-Active (Multi-Region)</button>
+                  </div>
+                </div>
+                <div class="field config-field" id="pro-region-single-wrap">
+                  <label for="pro-region" class="config-label">Region</label>
+                  <select id="pro-region" name="pro-region">
+                    <option value="us-east-1" selected>US East (N. Virginia)</option>
+                    <option value="eu-west-1">EU (Ireland)</option>
+                    <option value="ap-southeast-1">Asia Pacific (Singapore)</option>
+                    <option value="us-west-2">US West (Oregon)</option>
+                    <option value="eu-central-1">EU (Frankfurt)</option>
+                  </select>
+                </div>
+                <div class="field config-field" id="pro-region-multi-wrap" hidden>
+                  <label class="config-label">Regions</label>
+                  <div class="tag-picker" id="region-tag-picker">
+                    <div class="tag-picker-tags" id="region-tags"></div>
+                    <div class="tag-picker-dropdown" id="region-dropdown">
+                      <div class="tag-picker-option" data-value="us-east-1">US East (N. Virginia)</div>
+                      <div class="tag-picker-option" data-value="eu-west-1">EU (Ireland)</div>
+                      <div class="tag-picker-option" data-value="ap-southeast-1">Asia Pacific (Singapore)</div>
+                      <div class="tag-picker-option" data-value="us-west-2">US West (Oregon)</div>
+                      <div class="tag-picker-option" data-value="eu-central-1">EU (Frankfurt)</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="config-divider-line"></div>
+
+              <h4 class="config-group-title">VPC Configuration</h4>
+
+              <div class="field config-field" style="margin-bottom:14px">
+                <label class="config-label">Availability Zones</label>
+                <div class="radio-group">
+                  <label class="radio-option"><input type="radio" name="vpc-az-mode" value="no-preference" checked /> No preference</label>
+                  <label class="radio-option"><input type="radio" name="vpc-az-mode" value="manual" /> Manual selection</label>
+                </div>
+              </div>
+
+              <div id="vpc-config-container"></div>
+
+              <div class="config-divider-line"></div>
+
+              <h4 class="config-group-title">Security <span class="preview-tag">Preview</span></h4>
+              <div class="field config-field">
+                <div class="radio-group">
+                  <label class="radio-option"><input type="radio" name="pro-public-endpoint" value="allow" checked /> Allow public endpoint</label>
+                  <label class="radio-option"><input type="radio" name="pro-public-endpoint" value="block" /> Block public endpoint</label>
+                </div>
+              </div>
+            </div>
+          </details>
+
+          <details class="advanced-details advanced-group">
+            <summary>Maintenance</summary>
+            <div class="config-section">
+              <div class="field config-field">
+                <label class="config-label">Maintenance windows</label>
+                <div class="seg-toggle" id="pro-maintenance-toggle" role="group" aria-label="Maintenance mode">
+                  <button type="button" class="seg-btn seg-btn-active" data-value="automatic">Automatic</button>
+                  <button type="button" class="seg-btn" data-value="manual">Manual</button>
+                </div>
+                <p class="config-hint" id="maint-auto-hint">Redis will perform maintenance automatically while limiting service disruption as much as possible.</p>
+              </div>
+              <div id="maint-manual-config" hidden>
+                <div class="config-divider-line"></div>
+                <div class="config-sub-header">
+                  <span class="config-label" style="margin-bottom:0">Time windows</span>
+                </div>
+                <p class="config-hint" style="margin-bottom:10px">Configure time windows for when Redis can perform maintenance on your cluster.</p>
+                <div class="maint-timeframe">
+                  <div class="maint-timeframe-row">
+                    <div class="field config-field">
+                      <label class="config-label">Days</label>
+                      <select id="maint-days" name="maint-days">
+                        <option value="" selected>Select Days</option>
+                        <option value="mon-wed">Monday, Wednesday</option>
+                        <option value="tue-thu">Tuesday, Thursday</option>
+                        <option value="sat-sun">Saturday, Sunday</option>
+                        <option value="mon-fri">Monday – Friday</option>
+                        <option value="everyday">Every day</option>
+                      </select>
+                    </div>
+                    <div class="field config-field">
+                      <label class="config-label">From (GMT)</label>
+                      <select id="maint-from" name="maint-from">
+                        <option value="00:00" selected>12:00 AM</option>
+                        <option value="02:00">2:00 AM</option>
+                        <option value="04:00">4:00 AM</option>
+                        <option value="06:00">6:00 AM</option>
+                        <option value="08:00">8:00 AM</option>
+                        <option value="10:00">10:00 AM</option>
+                        <option value="12:00">12:00 PM</option>
+                        <option value="14:00">2:00 PM</option>
+                        <option value="16:00">4:00 PM</option>
+                        <option value="18:00">6:00 PM</option>
+                        <option value="20:00">8:00 PM</option>
+                        <option value="22:00">10:00 PM</option>
+                      </select>
+                    </div>
+                    <div class="field config-field">
+                      <label class="config-label">Duration</label>
+                      <select id="maint-duration" name="maint-duration">
+                        <option value="4">4 hr</option>
+                        <option value="6">6 hr</option>
+                        <option value="8" selected>8 hr</option>
+                        <option value="12">12 hr</option>
+                      </select>
+                    </div>
+                  </div>
+                </div>
+                <p class="config-hint config-hint-recommendation">Recommendations: Two different days &middot; 8 hours per window</p>
+              </div>
+            </div>
+          </details>
+
+        </div>
+
+        <div class="form-actions">
+          <button type="button" class="btn btn-secondary" id="back-step2">Back</button>
+          <button type="button" class="btn btn-primary" id="next-step2">Next</button>
+          <span class="bottom-bar-price" id="size-price">$5/mo</span>
+        </div>
+      </section>
+
+      <!-- Payment method modal (2-step: card → billing address) -->
+      <div class="modal-overlay" id="payment-modal" hidden aria-hidden="true">
+        <div class="modal modal-payment" role="dialog" aria-labelledby="payment-modal-title" aria-modal="true">
+          <div class="modal-step-indicator">
+            <span class="modal-step-dot modal-step-active" id="modal-dot-1">1</span>
+            <span class="modal-step-line"></span>
+            <span class="modal-step-dot" id="modal-dot-2">2</span>
+          </div>
+
+          <!-- Step 1: Card details -->
+          <div id="pay-step-1">
+            <h3 id="payment-modal-title" class="modal-title">Payment details</h3>
+            <form id="payment-form" class="payment-form" novalidate>
+              <div class="field">
+                <label for="card-number">Card number</label>
+                <input type="text" id="card-number" name="card-number" placeholder="1234 5678 9012 3456" maxlength="19" />
+              </div>
+              <div class="field-row">
+                <div class="field">
+                  <label for="card-exp">Expiry</label>
+                  <input type="text" id="card-exp" name="card-exp" placeholder="MM/YY" maxlength="5" />
+                </div>
+                <div class="field">
+                  <label for="card-cvc">CVC</label>
+                  <input type="text" id="card-cvc" name="card-cvc" placeholder="123" maxlength="4" />
+                </div>
+              </div>
+              <div class="field">
+                <label for="card-name">Name on card</label>
+                <input type="text" id="card-name" name="card-name" placeholder="Full name" />
+              </div>
+              <div class="coupon-section">
+                <button type="button" class="coupon-toggle" id="coupon-toggle">Have a coupon code?</button>
+                <div class="coupon-field" id="coupon-field" hidden>
+                  <div class="coupon-input-wrap">
+                    <input type="text" id="coupon-code" name="coupon-code" placeholder="Enter coupon code" />
+                    <button type="button" class="btn btn-secondary btn-sm" id="coupon-apply">Apply</button>
+                  </div>
+                  <p class="coupon-status" id="coupon-status" hidden></p>
+                </div>
+              </div>
+              <div class="modal-actions">
+                <button type="button" class="btn btn-secondary" id="payment-cancel">Cancel</button>
+                <button type="submit" class="btn btn-primary">Continue</button>
+              </div>
+            </form>
+          </div>
+
+          <!-- Step 2: Billing address -->
+          <div id="pay-step-2" hidden>
+            <h3 class="modal-title">Billing address</h3>
+            <form id="billing-form" class="payment-form" novalidate>
+              <div class="field">
+                <label for="billing-name">Full name</label>
+                <input type="text" id="billing-name" name="billing-name" placeholder="Full name" />
+              </div>
+              <div class="field">
+                <label for="billing-address">Street address</label>
+                <input type="text" id="billing-address" name="billing-address" placeholder="123 Main St" />
+              </div>
+              <div class="field-row">
+                <div class="field">
+                  <label for="billing-city">City</label>
+                  <input type="text" id="billing-city" name="billing-city" placeholder="City" />
+                </div>
+                <div class="field">
+                  <label for="billing-state">State / Province</label>
+                  <input type="text" id="billing-state" name="billing-state" placeholder="State" />
+                </div>
+              </div>
+              <div class="field-row">
+                <div class="field">
+                  <label for="billing-zip">Postal code</label>
+                  <input type="text" id="billing-zip" name="billing-zip" placeholder="12345" />
+                </div>
+                <div class="field">
+                  <label for="billing-country">Country</label>
+                  <select id="billing-country" name="billing-country">
+                    <option value="US" selected>United States</option>
+                    <option value="CA">Canada</option>
+                    <option value="GB">United Kingdom</option>
+                    <option value="DE">Germany</option>
+                    <option value="FR">France</option>
+                    <option value="AU">Australia</option>
+                    <option value="JP">Japan</option>
+                    <option value="SG">Singapore</option>
+                    <option value="IL">Israel</option>
+                    <option value="IN">India</option>
+                    <option value="OTHER">Other</option>
+                  </select>
+                </div>
+              </div>
+              <div class="modal-actions">
+                <button type="button" class="btn btn-secondary" id="billing-back">Back</button>
+                <button type="submit" class="btn btn-primary">Save &amp; continue</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+
+      <!-- Step 3: Review and create -->
+      <section class="card step-panel" id="step3" aria-labelledby="step3-title" hidden>
+        <h2 id="step3-title" class="step-title">Review and create</h2>
+        <p class="step-desc">Confirm your choices and create your database.</p>
+
+        <div id="submit-error" class="error-block" role="alert" aria-live="assertive" hidden></div>
+
+        <dl class="review-list">
+          <div class="review-row">
+            <dt>Database name</dt>
+            <dd><span id="review-name"></span> <a href="#" class="link-change" id="change-name" aria-label="Change database name">Change</a></dd>
+          </div>
+          <div class="review-row">
+            <dt>Cloud vendor</dt>
+            <dd><span id="review-cloud"></span> <a href="#" class="link-change" id="change-cloud" aria-label="Change cloud vendor">Change</a></dd>
+          </div>
+          <div class="review-row">
+            <dt>Primary region</dt>
+            <dd><span id="review-region"></span> <a href="#" class="link-change" id="change-region" aria-label="Change region">Change</a></dd>
+          </div>
+          <div class="review-row">
+            <dt>Plan</dt>
+            <dd><span id="review-plan"></span> <a href="#" class="link-change" id="change-plan" aria-label="Change plan">Change</a></dd>
+          </div>
+          <div class="review-row">
+            <dt>Database version</dt>
+            <dd><span id="review-db-version"></span></dd>
+          </div>
+          <div class="review-row" id="review-memory-row" hidden>
+            <dt>Memory type</dt>
+            <dd><span id="review-memory"></span></dd>
+          </div>
+          <div class="review-row" id="review-plan-size-row" hidden>
+            <dt>Plan size</dt>
+            <dd><span id="review-plan-size"></span></dd>
+          </div>
+          <div class="review-row" id="review-ha-row" hidden>
+            <dt>High availability</dt>
+            <dd><span id="review-ha"></span></dd>
+          </div>
+          <div class="review-row" id="review-persist-row" hidden>
+            <dt>Data persistence</dt>
+            <dd><span id="review-persist"></span></dd>
+          </div>
+          <div class="review-row" id="review-payment-row" hidden>
+            <dt>Payment method</dt>
+            <dd><span id="review-payment"></span></dd>
+          </div>
+
+          <div class="review-row" id="review-throughput-row" hidden>
+            <dt>Throughput</dt>
+            <dd><span id="review-throughput"></span></dd>
+          </div>
+          <div class="review-row" id="review-region-mode-row" hidden>
+            <dt>Region mode</dt>
+            <dd><span id="review-region-mode"></span></dd>
+          </div>
+          <div class="review-row" id="review-ram-pct-row" hidden>
+            <dt>RAM percentage</dt>
+            <dd><span id="review-ram-pct"></span></dd>
+          </div>
+          <div class="review-row" id="review-hashing-row" hidden>
+            <dt>Hashing policy</dt>
+            <dd><span id="review-hashing"></span></dd>
+          </div>
+          <div class="review-row" id="review-oss-row" hidden>
+            <dt>OSS Cluster API</dt>
+            <dd><span id="review-oss"></span></dd>
+          </div>
+          <div class="review-row" id="review-protocol-row" hidden>
+            <dt>Supported protocol</dt>
+            <dd><span id="review-protocol"></span></dd>
+          </div>
+          <div class="review-row" id="review-port-row" hidden>
+            <dt>Database port</dt>
+            <dd><span id="review-port"></span></dd>
+          </div>
+          <div class="review-row" id="review-copies-row" hidden>
+            <dt>Identical copies</dt>
+            <dd><span id="review-copies"></span></dd>
+          </div>
+          <div class="review-row" id="review-endpoint-row" hidden>
+            <dt>Public endpoint</dt>
+            <dd><span id="review-endpoint"></span></dd>
+          </div>
+          <div class="review-row" id="review-maintenance-row" hidden>
+            <dt>Maintenance</dt>
+            <dd><span id="review-maintenance"></span></dd>
+          </div>
+        </dl>
+
+        <div class="form-actions">
+          <button type="button" class="btn btn-secondary" id="back-step3">Back</button>
+          <button type="button" class="btn btn-primary btn-create" id="create-db">
+            <span class="btn-text">Create database</span>
+            <span class="btn-loading" hidden aria-hidden="true">
+              <span class="spinner" aria-hidden="true"></span>
+              Creating your database…
+            </span>
+          </button>
+        </div>
+      </section>
+
+      <!-- Success (step 4) -->
+      <section class="card step-panel success-panel" id="step-success" aria-labelledby="success-title" hidden>
+        <h2 id="success-title" class="step-title">Your database is ready</h2>
+
+        <!-- Database summary -->
+        <dl class="db-summary">
+          <div class="db-summary-item">
+            <dt>Database</dt>
+            <dd id="success-db-name">my-redis-db</dd>
+          </div>
+          <div class="db-summary-item">
+            <dt>Host</dt>
+            <dd id="success-host">redis-abc123.redis.cloud</dd>
+          </div>
+          <div class="db-summary-item">
+            <dt>Port</dt>
+            <dd id="success-port">12345</dd>
+          </div>
+          <div class="db-summary-item">
+            <dt>Username</dt>
+            <dd>default</dd>
+          </div>
+          <div class="db-summary-item">
+            <dt>Password</dt>
+            <dd><span id="success-password">••••••••</span> <button type="button" class="btn-reveal-inline" id="reveal-password">Show</button></dd>
+          </div>
+        </dl>
+
+        <!-- Tabs -->
+        <div class="success-tabs">
+          <div class="success-tab-bar" role="tablist">
+            <button type="button" class="success-tab active" data-tab="connect" role="tab" aria-selected="true">Connection Strings</button>
+            <button type="button" class="success-tab" data-tab="insight" role="tab" aria-selected="false">Redis Insight</button>
+          </div>
+
+          <!-- Tab: Connection Strings -->
+          <div class="success-tab-panel" id="tab-connect" role="tabpanel">
+            <div class="success-block">
+              <div class="code-block-wrap cli-prominent">
+                <label class="code-block-label">Command line</label>
+                <div class="code-block">
+                  <code id="cli-command" class="code-content">redis-cli -h redis-12345.redis.cloud -p 12345 -a ••••••••</code>
+                  <div class="code-actions">
+                    <button type="button" class="btn-copy" id="copy-cli" data-copy-target="cli-command" aria-label="Copy CLI command">
+                      <span class="btn-copy-text">Copy</span>
+                      <span class="btn-copy-done" aria-hidden="true">Copied</span>
+                    </button>
+                  </div>
+                </div>
+              </div>
+              <div class="code-block-wrap">
+                <label class="code-block-label">Connection string</label>
+                <div class="code-block">
+                  <code id="connection-string" class="code-content">redis://default:••••••••@redis-12345.redis.cloud:12345</code>
+                  <div class="code-actions">
+                    <button type="button" class="btn-copy" id="copy-conn" data-copy-target="connection-string" aria-label="Copy connection string">
+                      <span class="btn-copy-text">Copy</span>
+                      <span class="btn-copy-done" aria-hidden="true">Copied</span>
+                    </button>
+                    <button type="button" class="btn-reveal" id="reveal-conn" aria-label="Reveal connection string">Reveal</button>
+                  </div>
+                </div>
+              </div>
+              <div class="code-block-wrap">
+                <label class="code-block-label">Environment variables</label>
+                <div class="code-block code-block-multi">
+                  <pre id="env-vars" class="code-content"><code>REDIS_URL=redis://default:••••••••@redis-12345.redis.cloud:12345
+REDIS_HOST=redis-12345.redis.cloud
+REDIS_PORT=12345
+REDIS_PASSWORD=••••••••</code></pre>
+                  <div class="code-actions">
+                    <button type="button" class="btn-copy" id="copy-env" data-copy-target="env-vars" aria-label="Copy all environment variables">
+                      <span class="btn-copy-text">Copy all</span>
+                      <span class="btn-copy-done" aria-hidden="true">Copied</span>
+                    </button>
+                    <button type="button" class="btn-reveal" id="reveal-env" aria-label="Reveal environment variables">Reveal</button>
+                  </div>
+                </div>
+              </div>
+              <div class="code-block-wrap">
+                <label class="code-block-label">SDK snippet (Node.js)</label>
+                <div class="code-block code-block-multi">
+                  <pre id="sdk-snippet" class="code-content"><code>const redis = require('redis');
+const client = redis.createClient({
+  url: process.env.REDIS_URL
+});
+await client.connect();</code></pre>
+                  <div class="code-actions">
+                    <button type="button" class="btn-copy" id="copy-sdk" data-copy-target="sdk-snippet" aria-label="Copy SDK snippet">
+                      <span class="btn-copy-text">Copy</span>
+                      <span class="btn-copy-done" aria-hidden="true">Copied</span>
+                    </button>
+                    <a href="#" class="link-secondary">Open docs</a>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Tab: Redis Insight -->
+          <div class="success-tab-panel" id="tab-insight" role="tabpanel" hidden>
+            <div class="insight-connect-block">
+              <p class="insight-desc">Redis Insight is a visual tool for exploring, querying, and managing your Redis data. Connect using either option below.</p>
+              <div class="insight-options">
+                <div class="insight-option-card">
+                  <h4 class="insight-option-title">Desktop App</h4>
+                  <p class="insight-option-desc">Download and connect locally for full-featured access.</p>
+                  <a href="https://redis.io/insight/" target="_blank" rel="noopener" class="btn btn-secondary" style="width:100%">Open in Desktop</a>
+                </div>
+                <div class="insight-option-card">
+                  <h4 class="insight-option-title">Web App</h4>
+                  <p class="insight-option-desc">Connect instantly from your browser — no install needed.</p>
+                  <a href="https://app.redis.io/insight" target="_blank" rel="noopener" class="btn btn-primary" style="width:100%">Launch Redis Insight Web</a>
+                </div>
+              </div>
+              <div class="insight-connect-details">
+                <p class="insight-connect-label">To connect manually, use these details:</p>
+                <dl class="insight-connect-dl">
+                  <div class="insight-connect-row"><dt>Host</dt><dd id="insight-host">redis-abc123.redis.cloud</dd></div>
+                  <div class="insight-connect-row"><dt>Port</dt><dd id="insight-port">12345</dd></div>
+                  <div class="insight-connect-row"><dt>Username</dt><dd>default</dd></div>
+                  <div class="insight-connect-row"><dt>Password</dt><dd>Use password from above</dd></div>
+                  <div class="insight-connect-row"><dt>TLS</dt><dd>Enabled</dd></div>
+                </dl>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="next-steps">
+          <ul class="next-steps-list">
+            <li><a href="#" class="btn btn-primary" id="go-to-db">Go to database</a></li>
+            <li><button type="button" class="btn btn-secondary" id="create-another">Create another database</button></li>
+            <li><a href="#" class="link-secondary">Read the docs</a></li>
+            <li><a href="#" class="link-secondary">Test connection</a></li>
+          </ul>
+        </div>
+      </section>
+
+    </div>
+  </main>
+  </div>
+  <script src="app.js"></script>
+</body>
+</html>
